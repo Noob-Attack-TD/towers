@@ -45,84 +45,81 @@
     </main>
 
     <script>
-        async function loadTowerData() {
-            try {
-                const response = await fetch('stats.json');
-                if (!response.ok) throw new Error("Could not find stats.json");
-                
-                const data = await response.json();
-                const display = document.getElementById('tower-display');
-                const quickNav = document.getElementById('quick-nav');
-                document.getElementById('loading').style.display = 'none';
+    async function loadTowerData() {
+        try {
+            const response = await fetch('stats.json');
+            if (!response.ok) throw new Error("Could not find stats.json");
+            
+            const data = await response.json();
+            const display = document.getElementById('tower-display');
+            const quickNav = document.getElementById('quick-nav');
+            document.getElementById('loading').style.display = 'none';
 
-                // Sort towers alphabetically
-                const towerIds = Object.keys(data.towers).sort();
+            // Sort towers A-Z
+            const towerIds = Object.keys(data.towers).sort();
 
-                for (let id of towerIds) {
-                    // Skip internal developer towers
-                    if (id === "Skoonify" || id === "El13bui") continue;
+            for (let id of towerIds) {
+                // Skip internal developer towers
+                if (id === "Skoonify" || id === "El13bui") continue;
 
-                    const tower = data.towers[id];
+                const tower = data.towers[id];
 
-                    // 1. Add to Sidebar Navigation
-                    quickNav.innerHTML += `<li><a href="#${id}">${tower.name}</a></li>`;
+                // 1. Sidebar Link
+                quickNav.innerHTML += `<li><a href="#${id}">${tower.name}</a></li>`;
 
-                    // 2. Build Level Rows
-                    let rows = tower.levels.map((lvl, index) => {
-                        // Handle Uppercase keys from Roblox & Level 1 fallback
-                        const currentLvl = lvl.level || (index + 1);
-                        const cost = lvl.Cost || lvl.cost || 0;
-                        const dmg = lvl.Damage || lvl.damage || 0;
-                        const range = lvl.Range || lvl.range || 0;
-                        const cd = lvl.Cooldown || lvl.cooldown || "N/A";
-                        
-                        // Note Logic (Ghost Detection / Support)
-                        let notes = lvl.note || "-";
-                        if (lvl.GhostDetection === 1) notes = "👁️ Ghost Detection";
-                        else if (lvl.SupportType1) notes = "Support Buff";
+                // 2. Build Level Rows
+                let rows = tower.levels.map((lvl, index) => {
+                    const currentLvl = lvl.level || (index + 1);
+                    const cost = lvl.Cost || lvl.cost || 0;
+                    const dmg = lvl.Damage || lvl.damage || 0;
+                    const range = lvl.Range || lvl.range || 0;
+                    const cd = lvl.Cooldown || lvl.cooldown || "N/A";
+                    
+                    // Ghost Detection Logic: Show icon if 1, dash if 0
+                    const ghostIcon = (lvl.GhostDetection === 1) ? "👁️ Yes" : "-";
 
-                        return `
-                            <tr>
-                                <td>${currentLvl}</td>
-                                <td>$${cost}</td>
-                                <td>${dmg}</td>
-                                <td>${range}</td>
-                                <td>${cd}</td>
-                                <td class="special-cell">${notes}</td>
-                            </tr>
-                        `;
-                    }).join('');
-
-                    // 3. Inject the Tower Block
-                    display.innerHTML += `
-                        <div class="tower-block" id="${id}">
-                            <div class="tower-title">
-                                <h2>${tower.name}</h2>
-                                <span class="type-tag">${tower.type || 'Land'}</span>
-                                <span class="type-tag dmg-tag">${tower.damageType || 'Single'}</span>
-                            </div>
-                            <table class="wiki-table">
-                                <thead>
-                                    <tr>
-                                        <th>Lvl</th>
-                                        <th>Cost</th>
-                                        <th>Dmg</th>
-                                        <th>Range</th>
-                                        <th>CD</th>
-                                        <th>Special</th>
-                                    </tr>
-                                </thead>
-                                <tbody>${rows}</tbody>
-                            </table>
-                        </div>
+                    return `
+                        <tr>
+                            <td>${currentLvl}</td>
+                            <td>$${cost}</td>
+                            <td>${dmg}</td>
+                            <td>${range}</td>
+                            <td>${cd}</td>
+                            <td class="ghost-cell">${ghostIcon}</td>
+                        </tr>
                     `;
-                }
-            } catch (error) {
-                document.getElementById('loading').innerHTML = `⚠️ Error: ${error.message}`;
-                console.error(error);
+                }).join('');
+
+                // 3. Inject the Tower Block
+                display.innerHTML += `
+                    <div class="tower-block" id="${id}">
+                        <div class="tower-title">
+                            <h2>${tower.name}</h2>
+                            <span class="type-tag">${tower.type || 'Land'}</span>
+                            <span class="type-tag dmg-tag">${tower.damageType || 'Single'}</span>
+                        </div>
+                        <table class="wiki-table">
+                            <thead>
+                                <tr>
+                                    <th>Lvl</th>
+                                    <th>Cost</th>
+                                    <th>Dmg</th>
+                                    <th>Range</th>
+                                    <th>CD</th>
+                                    <th>Ghost Detection</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
             }
+        } catch (error) {
+            document.getElementById('loading').innerHTML = `⚠️ Error: ${error.message}`;
+            console.error(error);
         }
-        loadTowerData();
-    </script>
+    }
+    loadTowerData();
+</script>
 </body>
 </html>
