@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tower Wiki | Noob Attack TD</title>
+    <title>Tower Stats Hub | Noob Attack TD</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
@@ -11,11 +11,11 @@
 
     <nav class="navbar">
         <div class="nav-container">
-            <a href="/" class="logo">NOOB ATTACK TD</a>
+            <a href="https://noob-attack-td.github.io/" class="logo">NOOB ATTACK TD</a>
             <ul class="nav-links">
-                <li><a href="/">Home</a></li>
-                <li><a href="index.html" class="active">Towers</a></li>
-                <li><a href="/lore/">Lore</a></li>
+                <li><a href="https://noob-attack-td.github.io/">Home</a></li>
+                <li><a href="#" class="active">Towers</a></li>
+                <li><a href="https://noob-attack-td.github.io/lore/">Lore</a></li>
             </ul>
         </div>
     </nav>
@@ -23,42 +23,106 @@
     <main class="container">
         <section class="content">
             <header class="page-header">
-                <h1>All Towers</h1>
-                <p>Select a tower to view detailed leveling stats and abilities.</p>
+                <h1>Tower Statistics</h1>
+                <p>Official live data for NATD v2.5.3</p>
             </header>
 
-            <div id="loading" class="status-msg">Loading Tower Database...</div>
-            <div id="tower-grid" class="tower-grid"></div>
+            <div id="loading" class="status-msg">Connecting to NATD API...</div>
+            <div id="tower-display"></div>
         </section>
+
+        <aside class="sidebar">
+            <div class="sidebar-box">
+                <h4>Jump to Tower</h4>
+                <ul id="quick-nav" class="sidebar-nav">
+                    </ul>
+            </div>
+            <div class="sidebar-box">
+                <h4>API Data</h4>
+                <a href="stats.json" target="_blank" class="api-link">View Raw JSON</a>
+            </div>
+        </aside>
     </main>
 
     <script>
-        async function loadHub() {
+        async function loadTowerData() {
             try {
                 const response = await fetch('stats.json');
+                if (!response.ok) throw new Error("Could not find stats.json");
+                
                 const data = await response.json();
-                const grid = document.getElementById('tower-grid');
+                const display = document.getElementById('tower-display');
+                const quickNav = document.getElementById('quick-nav');
                 document.getElementById('loading').style.display = 'none';
 
-                for (let id in data.towers) {
-                    // Skip Dev Towers
+                // Sort towers alphabetically
+                const towerIds = Object.keys(data.towers).sort();
+
+                for (let id of towerIds) {
+                    // Skip internal developer towers
                     if (id === "Skoonify" || id === "El13bui") continue;
 
                     const tower = data.towers[id];
-                    grid.innerHTML += `
-                        <a href="view.html?id=${id}" class="tower-card">
-                            <div class="tower-card-info">
-                                <h3>${tower.name}</h3>
-                                <span class="type-tag">${tower.type}</span>
+
+                    // 1. Add to Sidebar Navigation
+                    quickNav.innerHTML += `<li><a href="#${id}">${tower.name}</a></li>`;
+
+                    // 2. Build Level Rows
+                    let rows = tower.levels.map((lvl, index) => {
+                        // Handle Uppercase keys from Roblox & Level 1 fallback
+                        const currentLvl = lvl.level || (index + 1);
+                        const cost = lvl.Cost || lvl.cost || 0;
+                        const dmg = lvl.Damage || lvl.damage || 0;
+                        const range = lvl.Range || lvl.range || 0;
+                        const cd = lvl.Cooldown || lvl.cooldown || "N/A";
+                        
+                        // Note Logic (Ghost Detection / Support)
+                        let notes = lvl.note || "-";
+                        if (lvl.GhostDetection === 1) notes = "👁️ Ghost Detection";
+                        else if (lvl.SupportType1) notes = "Support Buff";
+
+                        return `
+                            <tr>
+                                <td>${currentLvl}</td>
+                                <td>$${cost}</td>
+                                <td>${dmg}</td>
+                                <td>${range}</td>
+                                <td>${cd}</td>
+                                <td class="special-cell">${notes}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    // 3. Inject the Tower Block
+                    display.innerHTML += `
+                        <div class="tower-block" id="${id}">
+                            <div class="tower-title">
+                                <h2>${tower.name}</h2>
+                                <span class="type-tag">${tower.type || 'Land'}</span>
+                                <span class="type-tag dmg-tag">${tower.damageType || 'Single'}</span>
                             </div>
-                        </a>
+                            <table class="wiki-table">
+                                <thead>
+                                    <tr>
+                                        <th>Lvl</th>
+                                        <th>Cost</th>
+                                        <th>Dmg</th>
+                                        <th>Range</th>
+                                        <th>CD</th>
+                                        <th>Special</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
                     `;
                 }
-            } catch (e) {
-                document.getElementById('loading').innerText = "Failed to load stats.json";
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `⚠️ Error: ${error.message}`;
+                console.error(error);
             }
         }
-        loadHub();
+        loadTowerData();
     </script>
 </body>
 </html>
