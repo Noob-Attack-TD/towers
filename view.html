@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Details | Noob Attack TD</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">← BACK TO TOWERS</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="content">
+            <div id="loading" class="status-msg">Loading Tower Data...</div>
+            
+            <div id="tower-content" style="display:none;">
+                <header class="page-header">
+                    <h1 id="t-name">Tower Name</h1>
+                    <div id="t-tags"></div>
+                </header>
+
+                <h3>Level Progression</h3>
+                <table class="wiki-table">
+                    <thead>
+                        <tr>
+                            <th>Lvl</th>
+                            <th>Cost</th>
+                            <th>Dmg</th>
+                            <th>Range</th>
+                            <th>Cooldown</th>
+                            <th>Special</th>
+                        </tr>
+                    </thead>
+                    <tbody id="t-rows"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <aside class="sidebar">
+            <div class="sidebar-box">
+                <h4>Quick Stats</h4>
+                <p id="t-desc">Data pulled from NATD v2.5.3</p>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        async function renderTower() {
+            try {
+                // 1. Get the ID from the URL (e.g., view.html?id=Minigunner)
+                const params = new URLSearchParams(window.location.search);
+                const towerId = params.get('id');
+
+                const response = await fetch('stats.json');
+                const data = await response.json();
+                const tower = data.towers[towerId];
+
+                if (!tower) {
+                    document.getElementById('loading').innerText = "Tower not found!";
+                    return;
+                }
+
+                // 2. Set Header Info
+                document.getElementById('t-name').innerText = tower.name;
+                document.getElementById('t-tags').innerHTML = `<span class="type-tag">${tower.type}</span> <span class="type-tag">${tower.damageType}</span>`;
+                
+                // 3. Build Table Rows
+                const tbody = document.getElementById('t-rows');
+                tbody.innerHTML = tower.levels.map((lvl, index) => {
+                    let notes = "-";
+                    if (lvl.GhostDetection === 1) notes = "👁️ Ghost Detection";
+                    if (lvl.SupportType1) notes = "Support Buff";
+                    
+                    return `
+                        <tr>
+                            <td>${lvl.level || (index + 1)}</td>
+                            <td>$${lvl.Cost || 0}</td>
+                            <td>${lvl.Damage || 0}</td>
+                            <td>${lvl.Range || 0}</td>
+                            <td>${lvl.Cooldown || 'N/A'}</td>
+                            <td class="special-cell">${notes}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // 4. Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('tower-content').style.display = 'block';
+                document.title = `${tower.name} | NATD Wiki`;
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loading').innerText = "Error loading tower data.";
+            }
+        }
+        renderTower();
+    </script>
+</body>
+</html>
