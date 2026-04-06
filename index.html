@@ -47,63 +47,76 @@
     </main>
 
     <script>
-        async function loadTowerData() {
-            try {
-                // Fetch the API file from the local folder
-                const response = await fetch('stats.json');
-                const data = await response.json();
-                
-                const display = document.getElementById('tower-display');
-                const quickNav = document.getElementById('quick-nav');
-                document.getElementById('loading').style.display = 'none';
+    async function loadTowerData() {
+        try {
+            const response = await fetch('stats.json');
+            const data = await response.json();
+            
+            const display = document.getElementById('tower-display');
+            const quickNav = document.getElementById('quick-nav');
+            document.getElementById('loading').style.display = 'none';
 
-                for (let id in data.towers) {
-                    const tower = data.towers[id];
+            for (let id in data.towers) {
+                const tower = data.towers[id];
 
-                    // 1. Create Sidebar Link
-                    quickNav.innerHTML += `<li><a href="#${id}">${tower.name}</a></li>`;
+                // 1. Create Sidebar Link
+                quickNav.innerHTML += `<li><a href="#${id}">${tower.name}</a></li>`;
 
-                    // 2. Build Table Rows
-                    let rows = tower.levels.map(lvl => `
+                // 2. Build Table Rows
+                let rows = tower.levels.map((lvl, index) => {
+                    // FALLBACKS: If the key is missing or undefined, use these defaults
+                    const currentLevel = lvl.level || (index + 1); // Uses index if .level is missing
+                    const cost = lvl.Cost || 0;
+                    const dmg = lvl.Damage || 0;
+                    const range = lvl.Range || 0;
+                    const cooldown = lvl.Cooldown || "N/A";
+                    
+                    // Special Notes Logic
+                    let notes = lvl.note || "-";
+                    if (lvl.GhostDetection === 1) notes = "👁️ Ghost Detection";
+                    if (lvl.SupportType1) notes = "Support Unit";
+
+                    return `
                         <tr>
-                            <td>${lvl.level}</td>
-                            <td>$${lvl.Cost}</td>
-                            <td>${lvl.Damage}</td>
-                            <td>${lvl.Range}</td>
-                            <td>${lvl.Cost || 'N/A'}</td>
-                            <td class="special-cell">${lvl.note || '-'}</td>
+                            <td>${currentLevel}</td>
+                            <td>$${cost}</td>
+                            <td>${dmg}</td>
+                            <td>${range}</td>
+                            <td>${cooldown}</td>
+                            <td class="special-cell">${notes}</td>
                         </tr>
-                    `).join('');
-
-                    // 3. Inject Table into Page
-                    display.innerHTML += `
-                        <div class="tower-block" id="${id}">
-                            <div class="tower-title">
-                                <h2>${tower.name}</h2>
-                                <span class="type-tag">${tower.type}</span>
-                            </div>
-                            <table class="wiki-table">
-                                <thead>
-                                    <tr>
-                                        <th>Lvl</th>
-                                        <th>Cost</th>
-                                        <th>Dmg</th>
-                                        <th>Range</th>
-                                        <th>Cooldown</th>
-                                    </tr>
-                                </thead>
-                                <tbody>${rows}</tbody>
-                            </table>
-                        </div>
                     `;
-                }
-            } catch (error) {
-                document.getElementById('loading').innerHTML = "⚠️ Error loading API. Ensure stats.json exists.";
-                console.error(error);
-            }
-        }
-        loadTowerData();
-    </script>
+                }).join('');
 
+                // 3. Inject Table into Page
+                display.innerHTML += `
+                    <div class="tower-block" id="${id}">
+                        <div class="tower-title">
+                            <h2>${tower.name}</h2>
+                            <span class="type-tag">${tower.type}</span>
+                        </div>
+                        <table class="wiki-table">
+                            <thead>
+                                <tr>
+                                    <th>Lvl</th>
+                                    <th>Cost</th>
+                                    <th>Dmg</th>
+                                    <th>Range</th>
+                                    <th>Cooldown</th>
+                                    <th>Special</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('loading').innerHTML = "⚠️ Error loading API. Ensure stats.json exists.";
+            console.error(error);
+        }
+    }
+    loadTowerData();
+</script>
 </body>
 </html>
