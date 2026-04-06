@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Stats Hub | Noob Attack TD</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="https://noob-attack-td.github.io/" class="logo">NOOB ATTACK TD</a>
+            <ul class="nav-links">
+                <li><a href="https://noob-attack-td.github.io/">Home</a></li>
+                <li><a href="#" class="active">Towers</a></li>
+                <li><a href="https://noob-attack-td.github.io/lore/">Lore</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="content">
+            <header class="page-header">
+                <h1>Tower Statistics</h1>
+                <p>Official data pulled directly from the NATD API (v1.0.6).</p>
+            </header>
+
+            <div id="loading" class="status-msg">Fetching tower data...</div>
+            
+            <div id="tower-display"></div>
+        </section>
+
+        <aside class="sidebar">
+            <div class="sidebar-box">
+                <h4>API Access</h4>
+                <p>Developers can access the raw data here:</p>
+                <a href="./api/v1/stats.json" class="api-link">View JSON API</a>
+            </div>
+            <div class="sidebar-box">
+                <h4>Navigation</h4>
+                <ul id="quick-nav">
+                    </ul>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        async function loadTowerData() {
+            try {
+                // Fetch the API file from the local folder
+                const response = await fetch('./api/v1/stats.json');
+                const data = await response.json();
+                
+                const display = document.getElementById('tower-display');
+                const quickNav = document.getElementById('quick-nav');
+                document.getElementById('loading').style.display = 'none';
+
+                for (let id in data.towers) {
+                    const tower = data.towers[id];
+
+                    // 1. Create Sidebar Link
+                    quickNav.innerHTML += `<li><a href="#${id}">${tower.name}</a></li>`;
+
+                    // 2. Build Table Rows
+                    let rows = tower.levels.map(lvl => `
+                        <tr>
+                            <td>${lvl.level}</td>
+                            <td>$${lvl.cost}</td>
+                            <td>${lvl.damage}</td>
+                            <td>${lvl.range}</td>
+                            <td>${lvl.rpm || 'N/A'}</td>
+                            <td class="special-cell">${lvl.note || '-'}</td>
+                        </tr>
+                    `).join('');
+
+                    // 3. Inject Table into Page
+                    display.innerHTML += `
+                        <div class="tower-block" id="${id}">
+                            <div class="tower-title">
+                                <h2>${tower.name}</h2>
+                                <span class="type-tag">${tower.type}</span>
+                            </div>
+                            <table class="wiki-table">
+                                <thead>
+                                    <tr>
+                                        <th>Lvl</th>
+                                        <th>Cost</th>
+                                        <th>Dmg</th>
+                                        <th>Range</th>
+                                        <th>RPM</th>
+                                        <th>Special Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('loading').innerHTML = "⚠️ Error loading API. Ensure stats.json exists in /api/v1/";
+                console.error(error);
+            }
+        }
+        loadTowerData();
+    </script>
+
+</body>
+</html>
