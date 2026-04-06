@@ -66,11 +66,11 @@
                     // 2. Build Table Rows
                     let rows = tower.levels.map(lvl => `
                         <tr>
-                            <td>${lvl.level}</td>
-                            <td>$${lvl.cost}</td>
-                            <td>${lvl.damage}</td>
-                            <td>${lvl.range}</td>
-                            <td>${lvl.rpm || 'N/A'}</td>
+                            <td>${lvl.Level}</td>
+                            <td>$${lvl.Cost}</td>
+                            <td>${lvl.Damage}</td>
+                            <td>${lvl.Range}</td>
+                            <td>${lvl.Cost || 'N/A'}</td>
                             <td class="special-cell">${lvl.note || '-'}</td>
                         </tr>
                     `).join('');
@@ -89,8 +89,7 @@
                                         <th>Cost</th>
                                         <th>Dmg</th>
                                         <th>Range</th>
-                                        <th>RPM</th>
-                                        <th>Special Notes</th>
+                                        <th>Cooldown</th>
                                     </tr>
                                 </thead>
                                 <tbody>${rows}</tbody>
